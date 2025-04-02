@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Container, Row, Col, Form, ListGroup, Card, ProgressBar, Alert, Image } from 'react-bootstrap';
-import { FaPlay, FaPause, FaUndo, FaCheck, FaTrash, FaVolumeMute, FaVolumeUp, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Button, Container, Row, Col, Form, ListGroup, Card, ProgressBar, Alert, Image, Navbar, Nav } from 'react-bootstrap';
+import { FaPlay, FaPause, FaUndo, FaCheck, FaTrash, FaVolumeMute, FaVolumeUp, FaEye, FaEyeSlash, FaSun, FaMoon, FaHourglass } from 'react-icons/fa';
 import { Howl } from 'howler';
+import './index.css';
 
 function App() {
+  // Dark Mode State
+  const [darkMode, setDarkMode] = useState(false);
+  
+  // Apply dark mode theme
+  useEffect(() => {
+    document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
   // Pomodoro Timer States
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
   const [isActive, setIsActive] = useState(false);
@@ -171,250 +180,275 @@ function App() {
   };
 
   return (
-    <Container className="mt-5 mb-5 position-relative">
-      {/* Cute GIF in corner */}
-      {showGif && (
-        <div className="cute-gif-container">
-          <Image 
-            src={cuteGifs[currentGifIndex]} 
-            alt="Cute study companion" 
-            className="cute-gif"
-          />
-          <Button 
-            variant="light" 
-            size="sm" 
-            className="gif-toggle-btn"
-            onClick={() => setShowGif(false)}
-            title="Hide companion"
-          >
-            <FaEyeSlash />
-          </Button>
-        </div>
-      )}
-      
-      {!showGif && (
-        <Button 
-          variant="light" 
-          className="show-gif-btn"
-          onClick={() => setShowGif(true)}
-          title="Show companion"
-        >
-          <FaEye />
-        </Button>
-      )}
-      
-      <Row className="mb-4">
-        <Col>
-          <h1 className="display-4 text-center mb-4">Study Dashboard</h1>
-        </Col>
-      </Row>
-      
-      {showAlert && (
-        <Alert variant="success" onClose={() => setShowAlert(false)} dismissible>
-          <Alert.Heading>Pomodoro Complete!</Alert.Heading>
-          <p>
-            Take a 5-minute break now. You've completed {pomodoroCount} pomodoro sessions.
-          </p>
-          <div className="d-flex justify-content-end">
-            <Button onClick={startBreak} variant="outline-success">
-              Start Break
+    <div className={darkMode ? 'dark-mode' : 'light-mode'}>
+      {/* Header with App Name, Logo, and Theme Toggle */}
+      <Navbar className={`app-header ${darkMode ? 'navbar-dark bg-dark-blue' : 'navbar-light bg-light-green'}`} expand="lg">
+        <Container>
+          <Navbar.Brand href="#home" className="d-flex align-items-center">
+            <FaHourglass size={24} className="me-2" />
+            <span>sandClock</span>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="ms-auto">
+              <Button 
+                variant={darkMode ? "outline-light" : "outline-dark"}
+                onClick={() => setDarkMode(!darkMode)}
+                className="theme-toggle-btn"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <FaSun /> : <FaMoon />}
+              </Button>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+
+      <Container className="mt-5 mb-5 position-relative">
+        {/* Cute GIF in corner */}
+        {showGif && (
+          <div className="cute-gif-container">
+            <Image 
+              src={cuteGifs[currentGifIndex]} 
+              alt="Cute study companion" 
+              className="cute-gif"
+            />
+            <Button 
+              variant="light" 
+              size="sm" 
+              className="gif-toggle-btn"
+              onClick={() => setShowGif(false)}
+              title="Hide companion"
+            >
+              <FaEyeSlash />
             </Button>
           </div>
-        </Alert>
-      )}
-      
-      <Row>
-        {/* Pomodoro Timer */}
-        <Col lg={4} md={6} className="mb-4">
-          <Card className="shadow-sm h-100">
-            <Card.Header className="bg-primary text-white">
-              <h3 className="mb-0 text-center">{isBreak ? 'Break Time' : 'Focus Time'}</h3>
-            </Card.Header>
-            <Card.Body className="d-flex flex-column">
-              <div className="timer-display">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
-              <div className="d-flex justify-content-center mb-3">
-                <Button
-                  variant={isActive ? "danger" : "success"}
-                  onClick={() => setIsActive(!isActive)}
-                  className="me-2"
-                >
-                  {isActive ? <FaPause /> : <FaPlay />} {isActive ? 'Pause' : 'Start'}
-                </Button>
-                <Button variant="secondary" onClick={resetTimer}>
-                  <FaUndo /> Reset
-                </Button>
-              </div>
-              <div className="text-center mt-auto">
-                <p>Completed: {pomodoroCount} Pomodoros</p>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm" 
-                  onClick={() => {
-                    setIsBreak(!isBreak);
-                    setTimeLeft(isBreak ? 25 * 60 : 5 * 60);
-                    setIsActive(false);
-                  }}
-                >
-                  {isBreak ? 'Switch to Focus' : 'Switch to Break'}
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        )}
         
-        {/* To-Do List */}
-        <Col lg={4} md={6} className="mb-4">
-          <Card className="shadow-sm h-100">
-            <Card.Header className="bg-info text-white">
-              <h3 className="mb-0 text-center">To-Do List</h3>
-            </Card.Header>
-            <Card.Body>
-              <Form onSubmit={addTask}>
-                <Form.Group className="mb-3 d-flex">
-                  <Form.Control
-                    type="text"
-                    placeholder="Add a new task"
-                    value={task}
-                    onChange={(e) => setTask(e.target.value)}
-                  />
-                  <Button type="submit" className="ms-2" variant="primary">
-                    Add
+        {!showGif && (
+          <Button 
+            variant="light" 
+            className="show-gif-btn"
+            onClick={() => setShowGif(true)}
+            title="Show companion"
+          >
+            <FaEye />
+          </Button>
+        )}
+        
+        <Row className="mb-4">
+          <Col>
+            <h1 className="display-4 text-center mb-4">Study Dashboard</h1>
+          </Col>
+        </Row>
+        
+        {showAlert && (
+          <Alert variant="success" onClose={() => setShowAlert(false)} dismissible>
+            <Alert.Heading>Pomodoro Complete!</Alert.Heading>
+            <p>
+              Take a 5-minute break now. You've completed {pomodoroCount} pomodoro sessions.
+            </p>
+            <div className="d-flex justify-content-end">
+              <Button onClick={startBreak} variant="outline-success">
+                Start Break
+              </Button>
+            </div>
+          </Alert>
+        )}
+        
+        <Row>
+          {/* Pomodoro Timer */}
+          <Col lg={4} md={6} className="mb-4">
+            <Card className="shadow-sm h-100">
+              <Card.Header className={darkMode ? "bg-dark-blue text-white" : "bg-primary text-white"}>
+                <h3 className="mb-0 text-center">{isBreak ? 'Break Time' : 'Focus Time'}</h3>
+              </Card.Header>
+              <Card.Body className="d-flex flex-column">
+                <div className="timer-display">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
+                <div className="d-flex justify-content-center mb-3">
+                  <Button
+                    variant={isActive ? "danger" : "success"}
+                    onClick={() => setIsActive(!isActive)}
+                    className="me-2"
+                  >
+                    {isActive ? <FaPause /> : <FaPlay />} {isActive ? 'Pause' : 'Start'}
                   </Button>
-                </Form.Group>
-              </Form>
-              
-              {tasks.length > 0 && (
-                <>
-                  <ProgressBar 
-                    now={tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0} 
-                    label={`${completedTasks.length}/${tasks.length}`} 
-                    className="mb-3"
-                  />
-                  <ListGroup className="mt-3 task-list">
-                    {tasks.map((task, index) => (
-                      <ListGroup.Item 
-                        key={index} 
-                        className="d-flex justify-content-between align-items-center"
-                        variant={task.completed ? "success" : ""}
-                      >
-                        <div 
-                          className={task.completed ? "text-decoration-line-through" : ""}
-                          style={{ cursor: "pointer", flex: 1 }}
-                          onClick={() => toggleComplete(index)}
+                  <Button variant="secondary" onClick={resetTimer}>
+                    <FaUndo /> Reset
+                  </Button>
+                </div>
+                <div className="text-center mt-auto">
+                  <p>Completed: {pomodoroCount} Pomodoros</p>
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    onClick={() => {
+                      setIsBreak(!isBreak);
+                      setTimeLeft(isBreak ? 25 * 60 : 5 * 60);
+                      setIsActive(false);
+                    }}
+                  >
+                    {isBreak ? 'Switch to Focus' : 'Switch to Break'}
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          
+          {/* To-Do List */}
+          <Col lg={4} md={6} className="mb-4">
+            <Card className="shadow-sm h-100">
+              <Card.Header className={darkMode ? "bg-dark-blue text-white" : "bg-info text-white"}>
+                <h3 className="mb-0 text-center">To-Do List</h3>
+              </Card.Header>
+              <Card.Body>
+                <Form onSubmit={addTask}>
+                  <Form.Group className="mb-3 d-flex">
+                    <Form.Control
+                      type="text"
+                      placeholder="Add a new task"
+                      value={task}
+                      onChange={(e) => setTask(e.target.value)}
+                    />
+                    <Button type="submit" className="ms-2" variant="primary">
+                      Add
+                    </Button>
+                  </Form.Group>
+                </Form>
+                
+                {tasks.length > 0 && (
+                  <>
+                    <ProgressBar 
+                      now={tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0} 
+                      label={`${completedTasks.length}/${tasks.length}`} 
+                      className="mb-3"
+                    />
+                    <ListGroup className="mt-3 task-list">
+                      {tasks.map((task, index) => (
+                        <ListGroup.Item 
+                          key={index} 
+                          className="d-flex justify-content-between align-items-center"
+                          variant={task.completed ? "success" : ""}
                         >
-                          {task.text}
-                        </div>
-                        <div>
-                          <Button
-                            variant={task.completed ? "outline-success" : "outline-secondary"}
-                            size="sm"
-                            className="me-2"
+                          <div 
+                            className={task.completed ? "text-decoration-line-through" : ""}
+                            style={{ cursor: "pointer", flex: 1 }}
                             onClick={() => toggleComplete(index)}
                           >
-                            <FaCheck />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => removeTask(index)}
-                          >
-                            <FaTrash />
-                          </Button>
-                        </div>
+                            {task.text}
+                          </div>
+                          <div>
+                            <Button
+                              variant={task.completed ? "outline-success" : "outline-secondary"}
+                              size="sm"
+                              className="me-2"
+                              onClick={() => toggleComplete(index)}
+                            >
+                              <FaCheck />
+                            </Button>
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => removeTask(index)}
+                            >
+                              <FaTrash />
+                            </Button>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  </>
+                )}
+                
+                {tasks.length === 0 && (
+                  <div className="text-center text-muted mt-4">
+                    No tasks yet. Add some tasks to get started!
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Lofi Music Player */}
+          <Col lg={4} md={12} className="mb-4">
+            <Card className="shadow-sm h-100">
+              <Card.Header className={darkMode ? "bg-dark-blue text-white" : "bg-success text-white"}>
+                <h3 className="mb-0 text-center">Lofi Music Player</h3>
+              </Card.Header>
+              <Card.Body>
+                <div className="text-center mb-3">
+                  <h5>Now Playing:</h5>
+                  <p className="mb-3">{tracks[currentTrackIndex].title}</p>
+                </div>
+                
+                <div className="d-flex justify-content-center mb-3">
+                  <Button 
+                    onClick={toggleMusic} 
+                    variant={isPlaying ? "danger" : "success"}
+                    className="me-2"
+                  >
+                    {isPlaying ? <FaPause /> : <FaPlay />} {isPlaying ? 'Pause' : 'Play'}
+                  </Button>
+                  <Button onClick={nextTrack} variant="primary">
+                    Next Track
+                  </Button>
+                </div>
+                
+                <div className="mt-4">
+                  <Form.Label className="d-flex justify-content-between">
+                    <span><FaVolumeMute /></span>
+                    <span>Volume</span>
+                    <span><FaVolumeUp /></span>
+                  </Form.Label>
+                  <Form.Range 
+                    min={0} 
+                    max={1} 
+                    step={0.1} 
+                    value={volume}
+                    onChange={(e) => changeVolume(parseFloat(e.target.value))}
+                  />
+                </div>
+                
+                <div className="mt-4">
+                  <h6 className="text-center mb-2">Playlist</h6>
+                  <ListGroup>
+                    {tracks.map((track, index) => (
+                      <ListGroup.Item 
+                        key={index}
+                        active={index === currentTrackIndex}
+                        action
+                        onClick={() => {
+                          if (sound.current) {
+                            sound.current.stop();
+                          }
+                          setCurrentTrackIndex(index);
+                          if (isPlaying) {
+                            setTimeout(() => {
+                              sound.current.play();
+                            }, 100);
+                          }
+                        }}
+                      >
+                        {track.title}
                       </ListGroup.Item>
                     ))}
                   </ListGroup>
-                </>
-              )}
-              
-              {tasks.length === 0 && (
-                <div className="text-center text-muted mt-4">
-                  No tasks yet. Add some tasks to get started!
                 </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Lofi Music Player */}
-        <Col lg={4} md={12} className="mb-4">
-          <Card className="shadow-sm h-100">
-            <Card.Header className="bg-success text-white">
-              <h3 className="mb-0 text-center">Lofi Music Player</h3>
-            </Card.Header>
-            <Card.Body>
-              <div className="text-center mb-3">
-                <h5>Now Playing:</h5>
-                <p className="mb-3">{tracks[currentTrackIndex].title}</p>
-              </div>
-              
-              <div className="d-flex justify-content-center mb-3">
-                <Button 
-                  onClick={toggleMusic} 
-                  variant={isPlaying ? "danger" : "success"}
-                  className="me-2"
-                >
-                  {isPlaying ? <FaPause /> : <FaPlay />} {isPlaying ? 'Pause' : 'Play'}
-                </Button>
-                <Button onClick={nextTrack} variant="primary">
-                  Next Track
-                </Button>
-              </div>
-              
-              <div className="mt-4">
-                <Form.Label className="d-flex justify-content-between">
-                  <span><FaVolumeMute /></span>
-                  <span>Volume</span>
-                  <span><FaVolumeUp /></span>
-                </Form.Label>
-                <Form.Range 
-                  min={0} 
-                  max={1} 
-                  step={0.1} 
-                  value={volume}
-                  onChange={(e) => changeVolume(parseFloat(e.target.value))}
-                />
-              </div>
-              
-              <div className="mt-4">
-                <h6 className="text-center mb-2">Playlist</h6>
-                <ListGroup>
-                  {tracks.map((track, index) => (
-                    <ListGroup.Item 
-                      key={index}
-                      active={index === currentTrackIndex}
-                      action
-                      onClick={() => {
-                        if (sound.current) {
-                          sound.current.stop();
-                        }
-                        setCurrentTrackIndex(index);
-                        if (isPlaying) {
-                          setTimeout(() => {
-                            sound.current.play();
-                          }, 100);
-                        }
-                      }}
-                    >
-                      {track.title}
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      
-      {/* Footer */}
-      <Row className="mt-4">
-        <Col className="text-center">
-          <p className="text-muted">
-            Stay focused and productive! Remember to take breaks when needed.
-          </p>
-        </Col>
-      </Row>
-    </Container>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        
+        {/* Footer */}
+        <Row className="mt-4">
+          <Col className="text-center">
+            <p className="text-muted">
+              Stay focused and productive! Remember to take breaks when needed.
+            </p>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }
 

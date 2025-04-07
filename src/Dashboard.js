@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Container, Row, Col, Form, ListGroup, Card, ProgressBar, Alert, Image, Navbar, Nav } from 'react-bootstrap';
-import { FaPlay, FaPause, FaUndo, FaCheck, FaTrash, FaVolumeMute, FaVolumeUp, FaEye, FaEyeSlash, FaSun, FaMoon, FaHourglass, FaSignOutAlt } from 'react-icons/fa';
+import { 
+  FaPlay, FaPause, FaUndo, FaCheck, FaTrash, FaVolumeMute, 
+  FaVolumeUp, FaEye, FaEyeSlash, FaSun, FaMoon, FaHourglass, 
+  FaSignOutAlt, FaHistory 
+} from 'react-icons/fa';
 import { Howl } from 'howler';
 import './index.css';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './auth/AuthContext';
-import Login from './auth/Login';
-import Signup from './auth/Signup';
-import PrivateRoute from './auth/PrivateRoute';
 import { signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
+import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import Tasklog from './components/Tasklog';
 
 const Dashboard = () => {
     // Dark Mode State
@@ -37,6 +38,7 @@ const Dashboard = () => {
     const [pomodoroCount, setPomodoroCount] = useState(0);
     const [showAlert, setShowAlert] = useState(false);
     const alertSound = useRef(null);
+    const [showTasklog, setShowTasklog] = useState(false);
     
     // Cute GIF State
     const [showGif, setShowGif] = useState(true);
@@ -109,11 +111,27 @@ const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
     const [completedTasks, setCompletedTasks] = useState([]);
   
-    const addTask = (e) => {
+    const addTask = async (e) => {
       e.preventDefault();
       if (task.trim()) {
-        setTasks([...tasks, { text: task, completed: false }]);
+        const newTask = { 
+          text: task, 
+          completed: false,
+          userId: auth.currentUser.uid,
+          createdAt: serverTimestamp()
+        };
+        
+        // Add to local state
+        setTasks([...tasks, newTask]);
         setTask('');
+        
+        // Save to Firestore
+        try {
+          const docRef = await addDoc(collection(db, "tasks"), newTask);
+          console.log("Task saved with ID: ", docRef.id);
+        } catch (error) {
+          console.error("Error adding task: ", error);
+        }
       }
     };
   
@@ -217,7 +235,15 @@ const Dashboard = () => {
                 >
                   {darkMode ? <FaSun /> : <FaMoon />}
                 </Button>
-                
+                <Button 
+                  variant={darkMode ? "outline-light" : "outline-dark"}
+                  onClick={() => setShowTasklog(true)}
+                  className="me-2"
+                  title="Task History"
+                >
+                  <FaHistory />
+                </Button>
+                                
                 {/* NEW: Add this Logout Button right after the theme toggle */}
                 <Button 
                   variant={darkMode ? "outline-light" : "outline-dark"}
@@ -476,7 +502,9 @@ const Dashboard = () => {
             </Col>
           </Row>
         </Container>
+        <Tasklog show={showTasklog} handleClose={() => setShowTasklog(false)} />
       </div>
+      
     );
   
     
